@@ -21,6 +21,9 @@ async function UserSwitcher() {
       <span className="text-muted">Acting as</span>
       <select
         name="userId"
+        // Remount on change: React reuses the DOM node across a soft
+        // navigation, and an uncontrolled select keeps its old selection.
+        key={current?.id}
         defaultValue={current?.id}
         className="rounded-md border border-line bg-surface px-2 py-1"
       >
