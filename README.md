@@ -141,6 +141,10 @@ data.** The UI and the assistant's tools both go through it. The assistant has
 no privileged path of its own, so a tool cannot write a shape the UI couldn't
 produce — and any validation added there covers both callers at once.
 
+Why AI SDK alone and not LangChain, why roadmaps are records rather than text,
+and why the assistant shares the UI's data layer are all recorded in
+[`ADR.md`](ADR.md).
+
 ## Deliberately out of scope
 
 Auth and authorisation, multi-tenancy, optimistic UI, pagination, project
