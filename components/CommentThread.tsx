@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { addCommentAction, type FormState } from "@/app/actions";
+import { Avatar, buttonPrimary, control, fullTime, relativeTime } from "@/components/ui";
 
 export interface CommentRow {
   id: number;
@@ -14,12 +15,8 @@ export interface CommentRow {
 function Submit() {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="self-end rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
-    >
-      {pending ? "Posting…" : "Comment"}
+    <button type="submit" disabled={pending} className={buttonPrimary}>
+      {pending ? "Posting…" : "Post comment"}
     </button>
   );
 }
@@ -36,31 +33,52 @@ export function CommentThread({ projectId, comments }: { projectId: number; comm
   }, [state]);
 
   return (
-    <section className="space-y-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Comments ({comments.length})</h2>
+    <section aria-labelledby="comments-heading" className="space-y-4">
+      <h2 id="comments-heading" className="flex items-baseline gap-2 text-sm font-semibold">
+        Comments
+        <span className="font-mono text-xs font-normal text-muted">{comments.length}</span>
+      </h2>
 
-      <ul className="space-y-3">
-        {comments.map((comment) => (
-          <li key={comment.id} className="rounded-lg border border-line bg-surface p-3">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="text-sm font-medium">{comment.author ?? "Unknown"}</span>
-              <time className="text-xs text-muted">{comment.createdAt}</time>
-            </div>
-            <p className="mt-1 whitespace-pre-wrap text-sm">{comment.body}</p>
-          </li>
-        ))}
-        {comments.length === 0 ? <li className="text-sm text-muted">No comments yet.</li> : null}
-      </ul>
+      {comments.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-line-strong bg-surface px-4 py-6 text-center text-sm text-muted">
+          No comments yet. Start the thread below.
+        </p>
+      ) : (
+        <ol className="space-y-px overflow-hidden rounded-lg border border-line bg-line">
+          {comments.map((comment) => (
+            <li key={comment.id} className="flex gap-3 bg-surface px-4 py-3">
+              <Avatar name={comment.author} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-sm font-medium">{comment.author ?? "Unknown"}</span>
+                  <time
+                    dateTime={comment.createdAt}
+                    title={fullTime(comment.createdAt)}
+                    suppressHydrationWarning
+                    className="shrink-0 font-mono text-[11px] text-muted"
+                  >
+                    {relativeTime(comment.createdAt)}
+                  </time>
+                </div>
+                <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{comment.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
 
-      <form ref={formRef} action={formAction} className="flex flex-col gap-2">
+      <form ref={formRef} action={formAction} className="flex flex-col gap-2 rounded-lg border border-line bg-surface p-3">
         <textarea
           name="body"
           rows={3}
-          placeholder="Add a comment…"
-          className="rounded-md border border-line bg-surface px-3 py-2 text-sm"
+          placeholder="Add a comment"
+          aria-label="Add a comment"
+          className={`${control} resize-y border-transparent bg-transparent px-1 py-1 hover:border-transparent focus:border-transparent focus:ring-0`}
         />
-        {state?.error ? <p className="text-xs text-red-600">{state.error}</p> : null}
-        <Submit />
+        <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
+          <span className="text-xs text-red-600">{state?.error ?? ""}</span>
+          <Submit />
+        </div>
       </form>
     </section>
   );

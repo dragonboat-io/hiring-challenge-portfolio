@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { addComment, createProject, updateProject } from "@/lib/db/projects";
 import { projectStatusValues } from "@/lib/db/schema";
@@ -65,5 +66,25 @@ export async function addCommentAction(projectId: number, _prev: FormState, form
 export async function switchUserAction(formData: FormData) {
   const id = String(formData.get("userId") ?? "");
   (await cookies()).set(USER_COOKIE, id, { httpOnly: true, sameSite: "lax", path: "/" });
-  revalidatePath("/", "layout");
+  // A re-render inside this same response would still read the pre-action
+  // cookie store and paint the *previous* user, so revalidatePath() here
+  // leaves the switcher one click behind. Redirect instead: that is a fresh
+  // request, and it is the first one that can see the cookie we just set.
+  redirect(await currentPath());
+}
+
+/**
+ * The action has no pathname of its own, so switching from a project page
+ * would bounce to the list. Take it from the referer, pathname only, so a
+ * forged header cannot turn this into an open redirect.
+ */
+async function currentPath() {
+  const referer = (await headers()).get("referer");
+  if (!referer) return "/";
+  try {
+    const url = new URL(referer);
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return "/";
+  }
 }
